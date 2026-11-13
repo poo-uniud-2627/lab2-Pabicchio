@@ -17,7 +17,23 @@ public class OstacoloMobile implements Ostacolo {
     public static final Color COLORE = new Color(80, 200, 120);
 
     private Rettangolo area;   // non è final: l'ostacolo si muove
-    // scrivete qui gli altri campi che vi servono
+    private final double speed;
+    private final double upperBound;
+    private final double lowerBound;
+    private boolean isMovingDown = true;
+
+    private boolean isInsideVerticalBoundaries(double y, double height, boolean inclusive) {
+        double yWithHeight = y + height;
+
+        if (
+            !inclusive && (y > this.upperBound && yWithHeight < this.lowerBound) ||
+            inclusive && (y >= this.upperBound && yWithHeight <= this.lowerBound)
+        ) {
+            return true;
+        }
+
+        return false;
+    }
 
     /**
      * Pretende: area non è null; velocita è maggiore di 0; l'area sta fra i due limiti
@@ -25,8 +41,25 @@ public class OstacoloMobile implements Ostacolo {
      * Promette: un ostacolo che sta in area e che, al primo avanza, comincia a scendere.
      */
     public OstacoloMobile(Rettangolo area, double velocita, double limiteAlto, double limiteBasso) {
+        if (area == null) {
+            throw new IllegalArgumentException("area must not be null");
+        }
+        if (velocita <= 0) {
+            throw new IllegalArgumentException("velocita must be greater than zero");
+        }
+        if (limiteAlto >= limiteBasso) {
+            throw new IllegalArgumentException("the provided lower bound must be greater than the provided upper bound");
+        }
+
+        this.upperBound = limiteAlto;
+        this.lowerBound = limiteBasso;
+
+        if (!isInsideVerticalBoundaries(area.y(), area.altezza(), true)) {
+            throw new IllegalArgumentException("area must be inside the provided bounds");
+        }
+
         this.area = area;
-        // scrivete qui
+        this.speed = velocita;
     }
 
     @Override
@@ -35,18 +68,18 @@ public class OstacoloMobile implements Ostacolo {
     /** Non si rompe mai: il colpo non cambia niente (né dove sta, né come si muove). */
     @Override
     public void colpisci(Ostacoli campo) {
-        // scrivete qui
+        // nessuna azione
     }
 
     @Override
     public boolean isRotto() {
-        return false; // scrivete qui
+        return false;
     }
 
     /** Promette: COLORE. */
     @Override
     public Color getColore() {
-        return null; // scrivete qui
+        return COLORE;
     }
 
     /**
@@ -58,6 +91,23 @@ public class OstacoloMobile implements Ostacolo {
      */
     @Override
     public void avanza() {
-        // scrivete qui
+        double newY;
+        if (this.isMovingDown) {
+            newY = this.area.y() + this.speed;
+        } else {
+            newY = this.area.y() - this.speed;
+        }
+
+        if (!isInsideVerticalBoundaries(newY, this.area.altezza(), false)) { // tests expect this to be non-inclusive?
+            newY = this.isMovingDown ? this.lowerBound - this.area.altezza() : this.upperBound;
+            this.isMovingDown = !this.isMovingDown;
+        }
+
+        this.area = new Rettangolo(
+            this.area.x(),
+            newY,
+            this.area.larghezza(),
+            this.area.altezza()
+        );
     }
 }
