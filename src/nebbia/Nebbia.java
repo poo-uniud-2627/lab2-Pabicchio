@@ -11,9 +11,15 @@ import geometria.Rettangolo;
  * Quale nebbia c'è in un livello lo decide il MotoreDeiLivelli.
  */
 public class Nebbia {
+    private final Rettangolo zona;
+
+    private Nebbia(Rettangolo zona) {
+        this.zona = zona;
+    }
+
     /** Nessuna nebbia: non nasconde niente. */
     public static Nebbia nessuna() {
-        throw new UnsupportedOperationException("da scrivere");
+        return new Nebbia(null);
     }
 
     /**
@@ -24,17 +30,29 @@ public class Nebbia {
      * o se frazione non è fra 0 (compreso) e 1 (escluso).
      */
     public static Nebbia alCentro(int larghezzaCampo, int altezzaCampo, double frazione) {
-        throw new UnsupportedOperationException("da scrivere");
+        if (larghezzaCampo <= 0 || altezzaCampo <= 0
+                || Double.isNaN(frazione) || frazione < 0 || frazione >= 1) {
+            throw new IllegalArgumentException("dimensioni o frazione non valide");
+        }
+        if (frazione == 0) {
+            return nessuna();
+        }
+        double larghezza = larghezzaCampo * frazione;
+        double x = (larghezzaCampo - larghezza) / 2.0;
+        return new Nebbia(new Rettangolo(x, 0, larghezza, altezzaCampo));
     }
 
     /** Vero se la nebbia c'è. */
     public boolean isPresente() {
-        throw new UnsupportedOperationException("da scrivere");
+        return zona != null;
     }
 
     /** La zona coperta dalla nebbia. Pretende: isPresente(). Lancia IllegalStateException se la nebbia non c'è. */
     public Rettangolo getZona() {
-        throw new UnsupportedOperationException("da scrivere");
+        if (!isPresente()) {
+            throw new IllegalStateException("non c'e nebbia");
+        }
+        return zona;
     }
 
     /**
@@ -43,6 +61,15 @@ public class Nebbia {
      * Lancia IllegalArgumentException se punto è null.
      */
     public boolean nasconde(Posizione punto) {
-        throw new UnsupportedOperationException("da scrivere");
+        if (punto == null) {
+            throw new IllegalArgumentException("il punto non puo essere null");
+        }
+        if (!isPresente()) {
+            return false;
+        }
+        return punto.x() >= zona.x()
+                && punto.x() <= zona.x() + zona.larghezza()
+                && punto.y() >= zona.y()
+                && punto.y() <= zona.y() + zona.altezza();
     }
 }
